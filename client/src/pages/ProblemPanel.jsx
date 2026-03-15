@@ -220,7 +220,7 @@ const ProblemHeader = ({ title, difficulty, tags }) => (
     );
   };
 
-  const SolutionContent = ({ solution, error }) => {
+  const SolutionContent = ({ solution, error, selectedLanguage }) => {
     if (error === "locked") {
       return (
         <div className="flex flex-col items-center justify-center h-full text-center p-8 space-y-4">
@@ -263,30 +263,34 @@ const ProblemHeader = ({ title, difficulty, tags }) => (
                 ),
               }}
             />
-            {solution.code && (
-              <div className="mt-6 not-prose">
-                <h4 className="text-base font-semibold text-slate-200 mb-2">
-                  Solution Code ({solution.language || "N/A"})
-                </h4>
-                <div className="border border-slate-700 rounded-md overflow-hidden min-h-[200px] max-h-[400px] resize-y">
-                  <Editor
-                    height="100%" // Ensure Editor fills its container for resize to work
-                    language={solution.language?.toLowerCase() || "plaintext"}
-                    value={solution.code || ""}
-                    theme="vs-dark"
-                    options={{
-                      readOnly: true,
-                      minimap: { enabled: false },
-                      fontSize: 13,
-                      scrollBeyondLastLine: false,
-                      automaticLayout: true, // Important for responsive resizing
-                      wordWrap: "on",
-                      padding: { top: 10, bottom: 10 },
-                    }}
-                  />
+            {solution.code && (() => {
+              const lang = solution.code[selectedLanguage] ? selectedLanguage : Object.keys(solution.code)[0];
+              const codeStr = solution.code[lang] || "";
+              return (
+                <div className="mt-6 not-prose">
+                  <h4 className="text-base font-semibold text-slate-200 mb-2">
+                    Solution Code ({lang || "N/A"})
+                  </h4>
+                  <div className="border border-slate-700 rounded-md overflow-hidden min-h-[200px] max-h-[400px] resize-y">
+                    <Editor
+                      height="100%" // Ensure Editor fills its container for resize to work
+                      language={lang?.toLowerCase() || "plaintext"}
+                      value={codeStr}
+                      theme="vs-dark"
+                      options={{
+                        readOnly: true,
+                        minimap: { enabled: false },
+                        fontSize: 13,
+                        scrollBeyondLastLine: false,
+                        automaticLayout: true, // Important for responsive resizing
+                        wordWrap: "on",
+                        padding: { top: 10, bottom: 10 },
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
             {solution.complexity && (
               <div className="mt-6 not-prose">
                 <h4 className="text-base font-semibold text-slate-200 mb-2">
@@ -357,6 +361,7 @@ const ProblemPanel = ({
   solution,
   tabContentLoading,
   solutionError,
+  selectedLanguage,
 }) => {
   const TABS_DEFINITION = [
     {
@@ -451,7 +456,7 @@ const ProblemPanel = ({
                   <SubmissionsContent submissions={submissions} />
                 )}
                 {activeTab === "solution" && (
-                  <SolutionContent solution={solution} error={solutionError} />
+                  <SolutionContent solution={solution} error={solutionError} selectedLanguage={selectedLanguage} />
                 )}
                 {activeTab === "visualize" && problem?.visualizationAssetUrl && (
                   <VisualizationContent

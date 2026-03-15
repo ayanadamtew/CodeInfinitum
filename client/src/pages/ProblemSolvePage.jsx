@@ -177,10 +177,11 @@ const ProblemSolvePage = () => {
       const response = await api.get(`/problems/${id}/solution`);
       setSolution(response.data);
     } catch (err) {
-      console.error("Error fetching solution:", err);
       if (err.response?.status === 403) {
+        // Expected: user hasn't solved the problem yet
         setSolutionError("locked");
       } else {
+        console.error("Error fetching solution:", err);
         setSolutionError("error");
       }
     } finally {
@@ -368,6 +369,7 @@ const ProblemSolvePage = () => {
           solution={solution}
           tabContentLoading={tabContentLoading}
           solutionError={solutionError}
+          selectedLanguage={language}
         />
         <EditorPanel
           language={language}

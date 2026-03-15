@@ -153,6 +153,10 @@ router.get("/:id", async (req, res) => {
 // Get generated summary for a problem
 router.get("/:id/generated-summary", async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid problem ID" });
+    }
+
     const problem = await Problem.findById(req.params.id).lean();
     if (!problem) {
       return res.status(404).json({ message: "Problem not found" });
@@ -169,6 +173,10 @@ router.get("/:id/generated-summary", async (req, res) => {
 // Get solution for a problem
 router.get("/:id/solution", auth, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid problem ID" });
+    }
+
     const problem = await Problem.findById(req.params.id);
 
     if (!problem) {
