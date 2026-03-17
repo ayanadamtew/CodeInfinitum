@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useContext } from "react"; 
+import { useState, useEffect, useCallback, useContext, useRef } from "react"; 
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../service/api";
 import { FiArrowLeft, FiMessageSquare } from "react-icons/fi";
@@ -21,6 +21,7 @@ const ProblemSolvePage = () => {
   const { id } = useParams(); // This `id` is from the URL, e.g., 'problem123'
   const navigate = useNavigate();
   const { user } = useAuth(); // Get user from AuthContext
+  const aiInitializedRef = useRef(false);
 
   const [problem, setProblem] = useState(null);
   const [activeTab, setActiveTab] = useState("statement");
@@ -71,6 +72,7 @@ const ProblemSolvePage = () => {
       setError(null);
       setProblem(null); // Clear previous problem
       setAiMessages([]); // Clear previous AI messages
+      aiInitializedRef.current = false; // Reset AI init ref on new problem load
       setIsAiChatVisible(false); // Keep chat hidden until problem data is ready for greeting
 
       try {
@@ -95,7 +97,8 @@ const ProblemSolvePage = () => {
   // ** EPIC 1: Intro to Problems with AI Help - New/Modified useEffect **
   // *******************************************************************
   useEffect(() => {
-    if (problem && problem.title && id) {
+    if (problem && problem.title && id && !aiInitializedRef.current) {
+      aiInitializedRef.current = true;
       // Ensure problem is loaded and id is available
       // 1.1: Auto-open chat
       setIsAiChatVisible(true);

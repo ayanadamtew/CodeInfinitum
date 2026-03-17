@@ -40,3 +40,20 @@ export const adminAuth = async (req, res, next) => {
     res.status(401).json({ message: 'Authentication failed' });
   }
 };
+
+export const optionalAuth = async (req, res, next) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.userId);
+      if (user) {
+        req.user = user;
+        req.token = token;
+      }
+    }
+  } catch (error) {
+    // Optionally log error, but do not block request
+  }
+  next();
+};

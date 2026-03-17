@@ -7,11 +7,15 @@ body {
 }
 
 .prose pre {
-  @apply bg-gray-50 p-4 rounded-md overflow-x-auto;
+  @apply bg-slate-800 p-4 rounded-md overflow-x-auto border border-slate-700;
 }
 
 .prose code {
-  @apply bg-gray-100 px-1 py-0.5 rounded text-gray-800;
+  @apply bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300 font-mono text-[0.9em] border border-slate-700/50;
+}
+
+.prose code.math-inline {
+  @apply bg-transparent p-0 text-inherit;
 }
 
 @keyframes float1 { 0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); opacity: 0.3; } 50% { transform: translateY(-30px) translateX(15px) rotate(10deg); opacity: 0.5; } }

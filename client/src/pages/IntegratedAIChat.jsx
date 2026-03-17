@@ -9,12 +9,30 @@ import { marked } from 'marked';
 
 const convertToHtml = (markdownText) => {
   if (!markdownText) return "";
+  
+  // Convert basic inline LaTeX to standard HTML inline code blocks
+  let parsedText = markdownText;
+  
+  // Handle double dollar signs (usually block equations)
+  parsedText = parsedText.replace(/\$\$(.*?)\$\$/g, '```math\n$1\n```');
+  
+  // Convert specific known LaTeX symbols to unicode equivalents for better display
+  parsedText = parsedText.replace(/\\times/g, '×');
+  parsedText = parsedText.replace(/\\leq/g, '≤');
+  parsedText = parsedText.replace(/\\geq/g, '≥');
+  parsedText = parsedText.replace(/\\cdot/g, '·');
+  parsedText = parsedText.replace(/\\pi/g, 'π');
+
+  // Handle single dollar signs (inline equations)
+  // The negative lookbehind/lookahead ensures we don't match currency like $50
+  parsedText = parsedText.replace(/(?<!\$)\$(?!\$)(.*?)(?<!\$)\$(?!\$)/g, '<code class="math-inline">$1</code>');
+  
   marked.setOptions({
     gfm: true,
     breaks: true,
     smartypants: true,
   });
-  return marked.parse(markdownText);
+  return marked.parse(parsedText);
 };
 
 const IntegratedAIChat = ({

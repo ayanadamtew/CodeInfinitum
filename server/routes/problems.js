@@ -1,7 +1,7 @@
 import express from "express";
 import Problem from "../models/Problem.js";
 import Submission from "../models/Submission.js";
-import { auth, adminAuth } from "../middleware/auth.js";
+import { auth, adminAuth, optionalAuth } from "../middleware/auth.js";
 import mongoose from 'mongoose';
 import { generateProblemSummary } from "../services/aiService.js";
 
@@ -12,7 +12,7 @@ const router = express.Router();
 // In backend/routes/problems.js
 
 // Get all problems with filtering, pagination, and status
-router.get("/", async (req, res) => {
+router.get("/", optionalAuth, async (req, res) => {
   try {
     const {
       difficulty,
@@ -26,7 +26,7 @@ router.get("/", async (req, res) => {
 
     // Apply filters
     if (difficulty && difficulty !== "all") {
-      query.difficulty = difficulty;
+      query.difficulty = { $regex: new RegExp(`^${difficulty}$`, 'i') };
     }
 
      
@@ -45,6 +45,27 @@ router.get("/", async (req, res) => {
       ];
     }
 
+    if (status && status !== "all" && req.user) {
+      const userId = req.user._id;
+
+      if (status === "solved") {
+        const solvedSubs = await Submission.find({ userId, status: "Accepted" }).distinct('problemId');
+        query._id = { ...query._id, $in: solvedSubs };
+      } else if (status === "attempted") {
+        const solvedSubs = await Submission.find({ userId, status: "Accepted" }).distinct('problemId');
+        const attemptedSubs = await Submission.find({ userId, status: { $ne: "Accepted" } }).distinct('problemId');
+        // Filter out those that have been eventually solved
+        const strictlyAttemptedIds = attemptedSubs.filter(id => !solvedSubs.some(sId => sId.toString() === id.toString()));
+        query._id = { ...query._id, $in: strictlyAttemptedIds };
+      } else if (status === "unsolved") {
+        const allSubs = await Submission.find({ userId }).distinct('problemId');
+        query._id = { ...query._id, $nin: allSubs };
+      }
+    } else if (status && status !== "all" && !req.user) {
+      // If user is not logged in, they can't filter by status. Return nothing.
+      query._id = { $in: [] };
+    }
+
     // --- Pagination and Total Count ---
     // Calculate total documents matching the query
     const totalProblems = await Problem.countDocuments(query);
@@ -59,6 +80,7 @@ router.get("/", async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip) 
       .limit(limit);
+
 
     // Add status for authenticated users and prepare final data structure
     let problemsWithStatus = problems; 
